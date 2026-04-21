@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIFF 測試工具</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f7f6; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 80%; max-width: 400px; text-align: center; }
+        .user-id { word-break: break-all; color: #00b900; font-weight: bold; margin-top: 10px; }
+        #status { font-size: 0.9rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>LIFF 使用者資訊</h3>
+        <p id="status">正在初始化...</p>
+        <div id="info" style="display:none;">
+            <p>您的 User ID:</p>
+            <p id="userId" class="user-id"></p>
+        </div>
+    </div>
+
+    <script>
+        async function initializeLiff() {
+            try {
+                // 將這裡替換為你在 LINE Developers 申請到的 LIFF ID
+                await liff.init({ liffId: "你的_LIFF_ID" });
+
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    const profile = await liff.getProfile();
+                    document.getElementById('userId').textContent = profile.userId;
+                    document.getElementById('status').textContent = "驗證成功 ✅";
+                    document.getElementById('info').style.display = "block";
+                }
+            } catch (err) {
+                document.getElementById('status').textContent = "初始化失敗: " + err;
+            }
+        }
+        initializeLiff();
+    </script>
+</body>
+</html>
