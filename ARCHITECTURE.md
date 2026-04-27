@@ -16,10 +16,11 @@
     *   這同時也作為 Socket.IO 的 Namespace (`/botName`) 以及事件名稱 (`botName_message`) 的依據。
 2.  **`tag`**: 代表欲幫使用者新增的標籤名稱。將與系統指令組合為 `set_tag|標籤名稱` 後送出。
 3.  **`port` (選用)**: 用於本地端測試環境。當有提供此參數時（如 `?port=5016`），連線目標將會轉向本地伺服器 `https://irl-svr.ee.yzu.edu.tw:5016`。
+4.  **`redirect` (選用)**: 用於發送事件後的畫面跳轉。若有提供此參數（如 `?redirect=https://google.com`），網頁將在 2 秒後跳轉至該網址，而非直接關閉視窗。
 
 ## 觸發流程
 1.  使用者點擊夾帶 `bot` 與 `tag` 參數的 LIFF 網址。
 2.  LIFF SDK 啟動，進行登入驗證取得 User ID。
 3.  前端程式解析網址參數，建構對應的伺服器連線網址與 Namespace。
 4.  建立 Socket.IO 連線並在連線成功 (`connect`) 觸發時，發送 JSON 格式的 Sensor Payload。
-5.  收到成功發送後，將在 2 秒鐘後自動呼叫 `liff.closeWindow()` 關閉網頁。
+5.  收到成功發送後，等待 2 秒鐘。若有設定 `redirect` 參數，則跳轉至指定網頁；否則呼叫 `liff.closeWindow()` 關閉網頁。

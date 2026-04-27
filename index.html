@@ -51,6 +51,7 @@
                     const botName = urlParams.get('bot'); 
                     const tagName = urlParams.get('tag');
                     const port = urlParams.get('port'); // 用於本地端測試
+                    const redirectUrl = urlParams.get('redirect'); // 用於跳轉網頁
 
                     if (botName) document.getElementById('displayBot').textContent = botName;
                     if (tagName) document.getElementById('displayTag').textContent = tagName;
@@ -74,7 +75,10 @@
                         document.getElementById('status').style.color = "black";
 
                         // 連線到對應的 namespace (等同 Python 的 sio.connect(..., namespaces=[f"/{botName}"]))
-                        const socket = io(`${hostUrl}/${botName}`);
+                        // 加入 transports 設定有助於解決部分環境下的連線問題
+                        const socket = io(`${hostUrl}/${botName}`, {
+                            transports: ['websocket', 'polling'] 
+                        });
 
                         socket.on('connect', () => {
                             // 準備訊息格式 (等同 Python 的 event)
@@ -92,14 +96,19 @@
                             document.getElementById('status').textContent = `成功發送標籤: ${tagName}`;
                             document.getElementById('status').style.color = "#00b900"; // 成功顯示綠色
                             
-                            // 延遲兩秒後自動關閉 LIFF 視窗
+                            // 延遲兩秒後自動處理跳轉或關閉 LIFF 視窗
                             setTimeout(() => {
-                                liff.closeWindow();
+                                if (redirectUrl) {
+                                    window.location.href = redirectUrl; // 跳轉到目標網址
+                                } else {
+                                    liff.closeWindow(); // 若無跳轉參數則預設關閉視窗
+                                }
                             }, 2000);
                         });
 
                         socket.on('connect_error', (error) => {
-                            document.getElementById('status').textContent = `連線錯誤: ${error}`;
+                            // 嘗試顯示更詳細的錯誤訊息
+                            document.getElementById('status').innerHTML = `連線錯誤: <br>${error.message || error}<br><span style="font-size: 0.8em; color: gray;">(可能是後端 CORS 限制或路徑錯誤)</span>`;
                             document.getElementById('status').style.color = "red";
                         });
                     } else {
