@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIFF 資訊顯示</title>
+    <!-- 引入 LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <!-- 引入 Socket.IO 也就是對應你 Python 程式的 JS 版 -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 10px; shadow: 0 2px 10px rgba(0,0,0,0.1); width: 80%; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 80%; }
         .info-label { font-size: 0.8rem; color: #888; margin-top: 15px; }
         .info-value { font-weight: bold; color: #00b900; word-break: break-all; }
+        #status { text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,6 +27,9 @@
 
             <div class="info-label">您的 User ID:</div>
             <div id="displayId" class="info-value">讀取中...</div>
+            
+            <div class="info-label">欲設定標籤:</div>
+            <div id="displayTag" class="info-value">未指定</div>
         </div>
     </div>
 
@@ -39,15 +46,69 @@
                     const profile = await liff.getProfile();
                     document.getElementById('displayId').textContent = profile.userId;
 
-                    // 3. 取得網址上的 bot 參數並直接顯示
+                    // 3. 取得網址上的參數
                     const urlParams = new URLSearchParams(window.location.search);
                     const botName = urlParams.get('bot'); 
-                    if (botName) {
-                        document.getElementById('displayBot').textContent = botName;
-                    }
+                    const tagName = urlParams.get('tag');
+                    const port = urlParams.get('port'); // 用於本地端測試
+
+                    if (botName) document.getElementById('displayBot').textContent = botName;
+                    if (tagName) document.getElementById('displayTag').textContent = tagName;
 
                     document.getElementById('status').style.display = "none";
                     document.getElementById('content').style.display = "block";
+
+                    // 4. 執行 Socket.IO 連線與發送
+                    if (botName && tagName) {
+                        // 判斷伺服器 URL
+                        // 預設為 Heroku app name
+                        let hostUrl = `https://${botName}.herokuapp.com`;
+                        
+                        // 若有傳入 port，代表在本地端測試
+                        if (port) {
+                            hostUrl = `https://irl-svr.ee.yzu.edu.tw:${port}`;
+                        }
+
+                        document.getElementById('status').style.display = "block";
+                        document.getElementById('status').textContent = `連線至 ${hostUrl} ...`;
+                        document.getElementById('status').style.color = "black";
+
+                        // 連線到對應的 namespace (等同 Python 的 sio.connect(..., namespaces=[f"/{botName}"]))
+                        const socket = io(`${hostUrl}/${botName}`);
+
+                        socket.on('connect', () => {
+                            // 準備訊息格式 (等同 Python 的 event)
+                            const payload = {
+                                type: 'Sensor',
+                                message: `set_tag|${tagName}`,
+                                user: profile.userId,
+                                api_index: 0,
+                                delay: 0
+                            };
+                            
+                            // 發送事件 (等同 Python 的 sio.emit(f'{botName}_message', ...))
+                            socket.emit(`${botName}_message`, payload);
+                            
+                            document.getElementById('status').textContent = `成功發送標籤: ${tagName}`;
+                            document.getElementById('status').style.color = "#00b900"; // 成功顯示綠色
+                            
+                            // 延遲兩秒後自動關閉 LIFF 視窗
+                            setTimeout(() => {
+                                liff.closeWindow();
+                            }, 2000);
+                        });
+
+                        socket.on('connect_error', (error) => {
+                            document.getElementById('status').textContent = `連線錯誤: ${error}`;
+                            document.getElementById('status').style.color = "red";
+                        });
+                    } else {
+                        if (!tagName) {
+                            document.getElementById('status').style.display = "block";
+                            document.getElementById('status').textContent = "未指定標籤參數 (?tag=...)";
+                            document.getElementById('status').style.color = "red";
+                        }
+                    }
                 }
             } catch (error) {
                 document.getElementById('status').textContent = "錯誤: " + error;
