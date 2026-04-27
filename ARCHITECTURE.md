@@ -13,7 +13,7 @@
 網頁透過 URL Query Parameters (`?key=value`) 接收動態變數：
 1.  **`bot`**: 代表目標伺服器的 App Name 或機器人識別名稱。
     *   **Heroku 環境**: 當僅傳入字串（如 `yzulabuse`）時，系統會自動組合出 `https://yzulabuse.herokuapp.com`。
-    *   這同時也作為 Socket.IO 的 Namespace (`/botName`) 以及事件名稱 (`botName_message`) 的依據。
+    *   **備註**: 不論 `bot` 參數為何，為了配合後端設定，Socket.IO 的 Namespace 固定為 `/websoc`，發送事件名稱固定為 `websoc_message`。
 2.  **`tag`**: 代表欲幫使用者新增的標籤名稱。將與系統指令組合為 `set_tag|標籤名稱` 後送出。
 3.  **`port` (選用)**: 用於本地端測試環境。當有提供此參數時（如 `?port=5016`），連線目標將會轉向本地伺服器 `https://irl-svr.ee.yzu.edu.tw:5016`。
 4.  **`redirect` (選用)**: 用於發送事件後的畫面跳轉。若有提供此參數（如 `?redirect=https://google.com`），網頁將在 2 秒後跳轉至該網址，而非直接關閉視窗。

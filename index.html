@@ -74,9 +74,8 @@
                         document.getElementById('status').textContent = `連線至 ${hostUrl} ...`;
                         document.getElementById('status').style.color = "black";
 
-                        // 連線到對應的 namespace (等同 Python 的 sio.connect(..., namespaces=[f"/{botName}"]))
-                        // 加入 transports 設定有助於解決部分環境下的連線問題
-                        const socket = io(`${hostUrl}/${botName}`, {
+                        // 根據測試程式，Namespace 固定為 /websoc
+                        const socket = io(`${hostUrl}/websoc`, {
                             transports: ['websocket', 'polling'] 
                         });
 
@@ -90,8 +89,8 @@
                                 delay: 0
                             };
                             
-                            // 發送事件 (等同 Python 的 sio.emit(f'{botName}_message', ...))
-                            socket.emit(`${botName}_message`, payload);
+                            // 發送事件 (根據測試程式，事件名稱固定為 websoc_message)
+                            socket.emit(`websoc_message`, payload);
                             
                             document.getElementById('status').textContent = `成功發送標籤: ${tagName}`;
                             document.getElementById('status').style.color = "#00b900"; // 成功顯示綠色

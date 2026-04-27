@@ -12,5 +12,6 @@
 
 ### 變更 (Changed)
 - 調整 `index.html` 畫面，新增顯示「欲設定標籤」資訊。
+- 修正 Socket.IO 的 `Namespace` 與事件名稱 (`eventName`) 為固定的 `websoc` 與 `websoc_message`。
 - 連線成功送出事件後，預設會**立即**關閉視窗，若有提供 `redirect` 參數則會**馬上**執行網頁跳轉，以符合中繼站的需求。
 - 改善 `connect_error` 事件處理：除了顯示詳細錯誤訊息外，若上標籤失敗也會在 3 秒後將使用者跳轉至目標網頁，避免卡在中繼站。
