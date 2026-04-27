@@ -95,12 +95,15 @@
                             document.getElementById('status').textContent = `成功發送標籤: ${tagName}`;
                             document.getElementById('status').style.color = "#00b900"; // 成功顯示綠色
                             
-                            // 立即處理跳轉或關閉 LIFF 視窗
-                            if (redirectUrl) {
-                                window.location.href = redirectUrl; // 跳轉到目標網址
-                            } else {
-                                liff.closeWindow(); // 若無跳轉參數則預設關閉視窗
-                            }
+                            // 給予 300 毫秒的微小緩衝時間，確保 WebSocket 封包確實送出再跳轉
+                            // 否則瀏覽器瞬間換頁會直接截斷尚未送出的網路請求
+                            setTimeout(() => {
+                                if (redirectUrl) {
+                                    window.location.href = redirectUrl; // 跳轉到目標網址
+                                } else {
+                                    liff.closeWindow(); // 若無跳轉參數則預設關閉視窗
+                                }
+                            }, 300);
                         });
 
                         socket.on('connect_error', (error) => {
