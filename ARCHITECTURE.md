@@ -23,4 +23,5 @@
 2.  LIFF SDK 啟動，進行登入驗證取得 User ID。
 3.  前端程式解析網址參數，建構對應的伺服器連線網址與 Namespace。
 4.  建立 Socket.IO 連線並在連線成功 (`connect`) 觸發時，發送 JSON 格式的 Sensor Payload。
-5.  收到成功發送後，等待 2 秒鐘。若有設定 `redirect` 參數，則跳轉至指定網頁；否則呼叫 `liff.closeWindow()` 關閉網頁。
+5.  收到成功發送後，等待 300 毫秒。若有設定 `redirect` 參數，則跳轉至指定網頁；否則呼叫 `liff.closeWindow()` 關閉網頁。
+6.  **例外處理與超時保護**：若發生 `connect_error` 或是連線卡住超過 5 秒，系統將視為超時並強制作為中繼站將使用者跳轉至 `redirect` 目標（如果有的話），以避免畫面永久卡死。

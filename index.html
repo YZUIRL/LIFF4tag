@@ -79,7 +79,19 @@
                             transports: ['websocket', 'polling'] 
                         });
 
+                        // 增加 timeout 保護，避免無限等待
+                        const fallbackTimeout = setTimeout(() => {
+                            document.getElementById('status').innerHTML = `連線逾時，準備跳轉...`;
+                            document.getElementById('status').style.color = "orange";
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl;
+                            } else {
+                                liff.closeWindow();
+                            }
+                        }, 5000); // 5秒超時
+
                         socket.on('connect', () => {
+                            clearTimeout(fallbackTimeout); // 連線成功則取消超時
                             // 準備訊息格式 (等同 Python 的 event)
                             const payload = {
                                 type: 'Sensor',
