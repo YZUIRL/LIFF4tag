@@ -96,20 +96,26 @@
                             document.getElementById('status').textContent = `成功發送標籤: ${tagName}`;
                             document.getElementById('status').style.color = "#00b900"; // 成功顯示綠色
                             
-                            // 延遲兩秒後自動處理跳轉或關閉 LIFF 視窗
-                            setTimeout(() => {
-                                if (redirectUrl) {
-                                    window.location.href = redirectUrl; // 跳轉到目標網址
-                                } else {
-                                    liff.closeWindow(); // 若無跳轉參數則預設關閉視窗
-                                }
-                            }, 2000);
+                            // 立即處理跳轉或關閉 LIFF 視窗
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl; // 跳轉到目標網址
+                            } else {
+                                liff.closeWindow(); // 若無跳轉參數則預設關閉視窗
+                            }
                         });
 
                         socket.on('connect_error', (error) => {
                             // 嘗試顯示更詳細的錯誤訊息
                             document.getElementById('status').innerHTML = `連線錯誤: <br>${error.message || error}<br><span style="font-size: 0.8em; color: gray;">(可能是後端 CORS 限制或路徑錯誤)</span>`;
                             document.getElementById('status').style.color = "red";
+                            
+                            // 作為中繼站，即便上標籤失敗，也應該讓使用者前往目標網頁
+                            // (此處保留 3 秒延遲，是為了讓您在測試時能看清錯誤訊息)
+                            if (redirectUrl) {
+                                setTimeout(() => {
+                                    window.location.href = redirectUrl;
+                                }, 3000);
+                            }
                         });
                     } else {
                         if (!tagName) {
