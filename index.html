@@ -6,8 +6,6 @@
     <title>LIFF 資訊顯示</title>
     <!-- 引入 LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- 引入 Socket.IO 也就是對應你 Python 程式的 JS 版 -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root {
             --primary-color: #00b900;
@@ -65,17 +63,15 @@
                     const port = urlParams.get('port');
                     const redirectUrl = urlParams.get('redirect');
 
-                    // 4. 執行標籤同步 (Socket.IO)
+                    // 4. 同步標籤 (Fetch POST)
                     if (botName && tagName) {
                         let hostUrl = `https://${botName}.herokuapp.com`;
                         if (port) hostUrl = `https://irl-svr.ee.yzu.edu.tw:${port}`;
+                        if (botName === 'superpages' || botName.startsWith('yzu')) {
+                            hostUrl = 'https://irl-svr.ee.yzu.edu.tw:5013';
+                        }
 
-                        const socket = io(`${hostUrl}/websoc`, {
-                            transports: ['websocket', 'polling'],
-                            timeout: 1500
-                        });
-
-                        // 建立一個通用的跳轉函式，確保只會觸發一次
+                        // 建立一個通用跳轉函式，確保只觸發一次
                         let hasRedirected = false;
                         const doRedirect = (delay = 0) => {
                             if (hasRedirected) return;
@@ -90,30 +86,34 @@
                             }, delay);
                         };
 
-                        // 1.5 秒超時保護，確保必定跳轉
+                        // 1.5 秒安全保護，確保必定跳轉
                         const fallbackTimeout = setTimeout(() => {
                             doRedirect(0);
                         }, 1500);
 
-                        socket.on('connect', () => {
-                            clearTimeout(fallbackTimeout);
-                            // 發送標籤指令
-                            socket.emit(`websoc_message`, {
-                                type: 'Sensor',
-                                message: `set_tag|${tagName}`,
-                                user: profile.userId,
-                                api_index: 0,
-                                delay: 0
+                        try {
+                            fetch(`${hostUrl}/api/trigger`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    type: 'Sensor',
+                                    message: `set_tag|${tagName}`,
+                                    user: profile.userId,
+                                    api_index: 0
+                                })
+                            }).then(() => {
+                                clearTimeout(fallbackTimeout);
+                                doRedirect(50);
+                            }).catch(() => {
+                                clearTimeout(fallbackTimeout);
+                                doRedirect(0);
                             });
-                            
-                            // 僅給予極短暫的 50ms 讓 Socket 封包送出，隨即跳轉
-                            doRedirect(50);
-                        });
-
-                        socket.on('connect_error', () => {
+                        } catch (e) {
                             clearTimeout(fallbackTimeout);
-                            doRedirect(0); // 失敗也立即跳轉
-                        });
+                            doRedirect(0);
+                        }
                     } else {
                         // 若缺少參數，直接跳轉或關閉
                         if (redirectUrl) {
