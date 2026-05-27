@@ -92,12 +92,11 @@
                         }, 1500);
 
                         try {
-                            fetch(`${hostUrl}/api/trigger`, {
+                            const fetchPromise = fetch(`${hostUrl}/api/trigger`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
-                                keepalive: true,
                                 body: JSON.stringify({
                                     type: 'Sensor',
                                     message: `set_tag|${tagName}`,
@@ -105,9 +104,17 @@
                                     api_index: 0
                                 })
                             });
-                            // 不等待 fetch 結果，立刻跳轉
-                            clearTimeout(fallbackTimeout);
-                            doRedirect(0);
+                            
+                            Promise.race([
+                                fetchPromise,
+                                new Promise(r => setTimeout(r, 800))
+                            ]).then(() => {
+                                clearTimeout(fallbackTimeout);
+                                doRedirect(0);
+                            }).catch(() => {
+                                clearTimeout(fallbackTimeout);
+                                doRedirect(0);
+                            });
                         } catch (e) {
                             clearTimeout(fallbackTimeout);
                             doRedirect(0);
