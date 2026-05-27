@@ -97,19 +97,17 @@
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
+                                keepalive: true,
                                 body: JSON.stringify({
                                     type: 'Sensor',
                                     message: `set_tag|${tagName}`,
                                     user: profile.userId,
                                     api_index: 0
                                 })
-                            }).then(() => {
-                                clearTimeout(fallbackTimeout);
-                                doRedirect(50);
-                            }).catch(() => {
-                                clearTimeout(fallbackTimeout);
-                                doRedirect(0);
                             });
+                            // 不等待 fetch 結果，立刻跳轉
+                            clearTimeout(fallbackTimeout);
+                            doRedirect(0);
                         } catch (e) {
                             clearTimeout(fallbackTimeout);
                             doRedirect(0);
