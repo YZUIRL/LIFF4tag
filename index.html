@@ -97,6 +97,7 @@
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
+                                keepalive: true,
                                 body: JSON.stringify({
                                     type: 'Sensor',
                                     message: `set_tag|${tagName}`,
