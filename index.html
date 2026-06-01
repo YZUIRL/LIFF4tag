@@ -86,13 +86,13 @@
                             }, delay);
                         };
 
-                        // 1.5 秒安全保護，確保必定跳轉
+                        // 3 秒安全保護，確保必定跳轉 (行動網路可能較慢)
                         const fallbackTimeout = setTimeout(() => {
                             doRedirect(0);
-                        }, 1500);
+                        }, 3000);
 
                         try {
-                            const fetchPromise = fetch(`${hostUrl}/api/trigger`, {
+                            fetch(`${hostUrl}/api/trigger`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -105,15 +105,12 @@
                                     api_index: 0,
                                     bot_name: botName
                                 })
-                            });
-                            
-                            Promise.race([
-                                fetchPromise,
-                                new Promise(r => setTimeout(r, 800))
-                            ]).then(() => {
+                            }).then(response => {
                                 clearTimeout(fallbackTimeout);
+                                // 不論成功失敗都立刻跳轉
                                 doRedirect(0);
-                            }).catch(() => {
+                            }).catch(error => {
+                                console.error('Fetch error:', error);
                                 clearTimeout(fallbackTimeout);
                                 doRedirect(0);
                             });
