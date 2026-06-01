@@ -86,13 +86,13 @@
                             }, delay);
                         };
 
-                        // 3 秒安全保護，確保必定跳轉 (行動網路可能較慢)
+                        // 最高等待 300ms，如果提早完成就提早跳轉。因為有 keepalive: true，即使提前跳轉，請求也會在背景完成。
                         const fallbackTimeout = setTimeout(() => {
                             doRedirect(0);
                         }, 3000);
 
                         try {
-                            fetch(`${hostUrl}/api/trigger`, {
+                            const fetchPromise = fetch(`${hostUrl}/api/trigger`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -105,9 +105,13 @@
                                     api_index: 0,
                                     bot_name: botName
                                 })
-                            }).then(response => {
+                            });
+
+                            Promise.race([
+                                fetchPromise,
+                                new Promise(r => setTimeout(r, 300))
+                            ]).then(() => {
                                 clearTimeout(fallbackTimeout);
-                                // 不論成功失敗都立刻跳轉
                                 doRedirect(0);
                             }).catch(error => {
                                 console.error('Fetch error:', error);
