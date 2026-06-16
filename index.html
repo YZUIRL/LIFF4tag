@@ -59,12 +59,14 @@
                     // 3. 取得網址參數
                     const urlParams = new URLSearchParams(window.location.search);
                     const botName = urlParams.get('bot'); 
-                    const tagName = urlParams.get('tag');
+                    const tagName = urlParams.get('tag') || '';
+                    const journeyId = urlParams.get('journey') || '';
+                    const menuId = urlParams.get('menu') || '';
                     const port = urlParams.get('port');
                     const redirectUrl = urlParams.get('redirect');
 
                     // 4. 同步標籤 (Fetch POST)
-                    if (botName && tagName) {
+                    if (botName && (tagName || journeyId || menuId)) {
                         let hostUrl = `https://${botName}.herokuapp.com`;
                         if (port) hostUrl = `https://irl-svr.ee.yzu.edu.tw:${port}`;
                         if (botName === 'superpages' || botName.startsWith('yzu')) {
@@ -100,7 +102,7 @@
                                 keepalive: true,
                                 body: JSON.stringify({
                                     type: 'Sensor',
-                                    message: `set_tag|${tagName}`,
+                                    message: `sys_bind|${tagName}|${journeyId}|${menuId}`,
                                     user: profile.userId,
                                     api_index: 0,
                                     bot_name: botName
